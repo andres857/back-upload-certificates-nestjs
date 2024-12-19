@@ -49,7 +49,7 @@ export class UploadFilesService {
 
   uploadToSpaces = async (fileName, fileContent, spacePath, bucket) => {
     console.log('********', fileName);
-
+    const region = 'nyc3';
     const ACL = 'public-read' as ObjectCannedACL;
     const contentType = this.getContentType(fileName);
 
@@ -63,10 +63,15 @@ export class UploadFilesService {
 
     try {
       const data = await this.s3Client.send(new PutObjectCommand(params));
+      const fileUrl = `https://${bucket}.${region}.digitaloceanspaces.com/${spacePath}`;
+
       console.log(
         'Successfully uploaded object: ' + params.Bucket + '/' + params.Key,
       );
-      return data;
+      return {
+        data: data,
+        fileUrl: fileUrl,
+      };
     } catch (err) {
       console.log('Error', err);
     }
@@ -105,6 +110,8 @@ export class UploadFilesService {
             spacesPath,
             'certificates-private-zones',
           );
+          console.log(uploadResult);
+          
 
           if (uploadResult) {
             estructura.urls_archivos.push({

@@ -66,9 +66,31 @@
             </form>
         </div>
         <div class="preview">
-            <p v-if="uploadStatus" :style="{ color: uploadStatus.error ? 'red' : 'black' }">
+            <div v-if="uploadStatus" :style="{ color: uploadStatus.error ? 'red' : 'black' }">
                 {{ uploadStatus.message }}
-            </p>
+                <div v-if="uploadStatus.data">
+                    <h3>heree</h3>
+                    {{ dataTable }}
+                    <h2>Archivos</h2>
+                    <ul>
+                        <li v-for="archivo in uploadStatus.data.urls_archivos">{{ archivo }}</li>
+                    </ul>
+
+                    <h2>Certificados</h2>
+
+                    <ul>
+                        <li v-for="carpeta in uploadStatus.data.carpetas">{{ carpeta }}</li>
+                    </ul>
+                    <h2>Archivos</h2>
+                    <ul>
+                        <li v-for="archivo in uploadStatus.data.archivos">{{ archivo }}</li>
+                    </ul>
+                    <h2>URLs</h2>
+                    <ul>
+                        <li v-for="url in uploadStatus.data.urls_archivos">{{ url.url.fileUrl }}</li>
+                    </ul>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -79,6 +101,7 @@
             setup() {
                 const fileInput = ref(null)
                 const uploadStatus = ref(null)
+                const dataTable = ref(null)
 
                 const handleFileChange = (event) => {
                     // Opcional: añadir lógica adicional cuando se selecciona el archivo
@@ -90,15 +113,20 @@
                     formData.append('file', file)
 
                     try {
-                        const response = await fetch('http://localhost:3005/upload-files', {
+                        const response = await fetch('/upload-files', {
                             method: 'POST',
                             body: formData
                         })
 
                         const data = await response.json()
+                        console.log(data);
+                        console.log(data.mensaje);
+
+                        dataTable.value = data.estructura.urls_archivos
                         uploadStatus.value = {
                             error: false,
-                            message: `Upload successful! File URL: ${data.url}`
+                            data: data.estructura,
+                            message: `Upload successful! File URL: ${data.mensaje}`
                         }
                     } catch (error) {
                         uploadStatus.value = {
