@@ -29,11 +29,6 @@ export enum UserType {
   FUNCIONARIO = 'funcionario',
 }
 
-// export enum UserStatus {
-//   ACTIVE = 'active',
-//   INACTIVE = 'inactive',
-// }
-
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn({ type: 'int', unsigned: true })

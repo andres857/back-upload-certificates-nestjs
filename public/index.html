@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Upload Documents</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -47,38 +48,74 @@
     </style>
 </head>
 <body>
-    <h1>Upload Documents</h1>
-    <div class="upload-form">
-        <form id="uploadForm">
-            <div class="form-group">
-                <label for="document">Select Document:</label>
-                <input type="file" id="document" name="file" required>
-            </div>
-            <button type="submit">Upload</button>
-        </form>
+    <div id="app">
+        <h1>Upload Certificates</h1>
+        <div class="upload-form">
+            <form @submit.prevent="handleSubmit">
+                <div class="form-group">
+                    <label for="document">Select Document:</label>
+                    <input 
+                        type="file" 
+                        id="document" 
+                        ref="fileInput"
+                        required
+                        @change="handleFileChange"
+                    >
+                </div>
+                <button type="submit">Upload</button>
+            </form>
+        </div>
+        <div class="preview">
+            <p v-if="uploadStatus" :style="{ color: uploadStatus.error ? 'red' : 'black' }">
+                {{ uploadStatus.message }}
+            </p>
+        </div>
     </div>
-    <div class="preview" id="preview"></div>
 
     <script>
-        const form = document.getElementById('uploadForm');
-        const preview = document.getElementById('preview');
+        const { createApp, ref } = Vue
 
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formData = new FormData(form);
+        createApp({
+            setup() {
+                const fileInput = ref(null)
+                const uploadStatus = ref(null)
 
-            try {
-                const response = await fetch('/api/upload', {
-                    method: 'POST',
-                    body: formData
-                });
+                const handleFileChange = (event) => {
+                    // Opcional: añadir lógica adicional cuando se selecciona el archivo
+                }
 
-                const data = await response.json();
-                preview.innerHTML = `<p>Upload successful! File URL: ${data.url}</p>`;
-            } catch (error) {
-                preview.innerHTML = `<p style="color: red;">Upload failed: ${error.message}</p>`;
+                const handleSubmit = async () => {
+                    const formData = new FormData()
+                    const file = fileInput.value.files[0]
+                    formData.append('file', file)
+
+                    try {
+                        const response = await fetch('http://localhost:3005/upload-files', {
+                            method: 'POST',
+                            body: formData
+                        })
+
+                        const data = await response.json()
+                        uploadStatus.value = {
+                            error: false,
+                            message: `Upload successful! File URL: ${data.url}`
+                        }
+                    } catch (error) {
+                        uploadStatus.value = {
+                            error: true,
+                            message: `Upload failed: ${error.message}`
+                        }
+                    }
+                }
+
+                return {
+                    fileInput,
+                    uploadStatus,
+                    handleFileChange,
+                    handleSubmit
+                }
             }
-        });
+        }).mount('#app')
     </script>
 </body>
 </html>

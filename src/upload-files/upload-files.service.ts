@@ -1,12 +1,42 @@
 import { Injectable } from '@nestjs/common';
+// import { promises as fs } from 'fs';
+import * as path from 'path';
+import * as unzipper from 'unzipper';
 import {
+  ObjectCannedACL,
   PutObjectCommand,
   S3Client,
-  ObjectCannedACL,
 } from '@aws-sdk/client-s3';
+
+interface FileStructure {
+  carpetas: string[];
+  archivos: string[];
+  urls_archivos: Array<{
+    nombre: string;
+    carpeta: string;
+    url: any;
+  }>;
+}
 
 @Injectable()
 export class UploadFilesService {
+  private getContentType(fileName: string): string {
+    const extension = fileName.toLowerCase().split('.').pop();
+    const contentTypes = new Map<string, string>([
+      ['pdf', 'application/pdf'],
+      ['png', 'image/png'],
+      ['jpg', 'image/jpeg'],
+      ['jpeg', 'image/jpeg'],
+      ['doc', 'application/msword'],
+      [
+        'docx',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      ],
+    ]);
+
+    return contentTypes.get(extension) || 'application/octet-stream';
+  }
+
   s3Client = new S3Client({
     endpoint: 'https://nyc3.digitaloceanspaces.com',
     forcePathStyle: false,
@@ -17,19 +47,20 @@ export class UploadFilesService {
     },
   });
 
-  // Step 4: Define a function that uploads your object using SDK's PutObjectCommand object and catches any errors.
-  uploadObject = async () => {
-    // Step 3: Define the parameters for the object you want to upload.
+  uploadToSpaces = async (fileName, fileContent, spacePath, bucket) => {
+    console.log('********', fileName);
+
+    const ACL = 'public-read' as ObjectCannedACL;
+    const contentType = this.getContentType(fileName);
+
     const params = {
-      Bucket: 'certificates-private-zones', // The path to the directory you want to upload the object to, starting with your Space name.
-      Key: 'folder-path/hello-world.txt', // Object key, referenced whenever you want to access this file later.
-      Body: 'Hello, World!', // The object's contents. This variable is an object, not a string.
-      ACL: 'public-read' as ObjectCannedACL, // Defines ACL permissions, such as private or public.
-      Metadata: {
-        // Defines metadata tags.
-        'x-amz-meta-my-key': 'your-value',
-      },
+      Bucket: bucket,
+      Key: spacePath,
+      Body: fileContent,
+      ACL: ACL,
+      ContentType: contentType,
     };
+
     try {
       const data = await this.s3Client.send(new PutObjectCommand(params));
       console.log(
@@ -40,4 +71,68 @@ export class UploadFilesService {
       console.log('Error', err);
     }
   };
+
+  async processZipFile(
+    file: Express.Multer.File,
+  ): Promise<{ estructura: FileStructure }> {
+    const estructura: FileStructure = {
+      carpetas: [],
+      archivos: [],
+      urls_archivos: [],
+    };
+
+    const carpetasSet = new Set<string>();
+
+    try {
+      const directory = await unzipper.Open.buffer(file.buffer);
+
+      for (const entry of directory.files) {
+        if (entry.type === 'Directory') {
+          carpetasSet.add(entry.path);
+          continue;
+        }
+
+        const folderPath = path.dirname(entry.path) + '/';
+        const fileName = path.basename(entry.path);
+
+        try {
+          const fileContent = await entry.buffer();
+
+          const spacesPath = `${folderPath}${fileName}`;
+          const uploadResult = await this.uploadToSpaces(
+            fileName,
+            fileContent,
+            spacesPath,
+            'certificates-private-zones',
+          );
+
+          if (uploadResult) {
+            estructura.urls_archivos.push({
+              nombre: fileName,
+              carpeta: folderPath,
+              url: uploadResult,
+            });
+            console.log(
+              `Success: file upload success, certificate: ${fileName}, name: ${folderPath}`,
+            );
+          } else {
+            console.log(`Error: No se pudo obtener URL para ${fileName}`);
+          }
+        } catch (error) {
+          console.error(
+            `Error al procesar archivo ${fileName}: ${error.message}`,
+          );
+        }
+
+        estructura.archivos.push(fileName);
+      }
+
+      estructura.carpetas = Array.from(carpetasSet);
+      console.log(estructura);
+
+      return { estructura };
+    } catch (error) {
+      throw new Error(`Error processing ZIP file: ${error.message}`);
+    }
+  }
 }
