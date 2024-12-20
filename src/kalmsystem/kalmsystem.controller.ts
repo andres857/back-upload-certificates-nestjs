@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Param } from '@nestjs/common';
 import { KalmsystemService } from './kalmsystem.service';
 
 @Controller('kalmsystem')
@@ -8,5 +8,10 @@ export class KalmsystemController {
   @Get()
   async findAll() {
     return await this.kalmsystemService.findAll();
+  }
+
+  @Get(':identification')
+  async findByIdentification(@Param('identification') identification: string) {
+    return await this.kalmsystemService.findByIdentification(identification);
   }
 }

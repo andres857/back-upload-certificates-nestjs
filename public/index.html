@@ -69,8 +69,16 @@
             <div v-if="uploadStatus" :style="{ color: uploadStatus.error ? 'red' : 'black' }">
                 {{ uploadStatus.message }}
                 <div v-if="uploadStatus.data">
-                    <h3>heree</h3>
-                    {{ dataTable }}
+                    <h3>Información de la subida</h3>
+                    <ul>
+                        <li v-for="url in dataTable">
+                            Certificado: {{ url.carpeta }}
+                            <br>
+                            Archivo: {{ url.nombre }}
+                            <br>
+                            URL: {{ url.url.fileUrl }}
+                        </li>
+                    </ul>
                     <h2>Archivos</h2>
                     <ul>
                         <li v-for="archivo in uploadStatus.data.urls_archivos">{{ archivo }}</li>
@@ -139,6 +147,7 @@
                 return {
                     fileInput,
                     uploadStatus,
+                    dataTable,
                     handleFileChange,
                     handleSubmit
                 }

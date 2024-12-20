@@ -7,7 +7,7 @@ import {
   PutObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3';
-
+import { KalmsystemService } from 'src/kalmsystem/kalmsystem.service';
 interface FileStructure {
   carpetas: string[];
   archivos: string[];
@@ -20,6 +20,8 @@ interface FileStructure {
 
 @Injectable()
 export class UploadFilesService {
+  constructor(private readonly kalmsystemService: KalmsystemService) {}
+
   private getContentType(fileName: string): string {
     const extension = fileName.toLowerCase().split('.').pop();
     const contentTypes = new Map<string, string>([
@@ -35,6 +37,10 @@ export class UploadFilesService {
     ]);
 
     return contentTypes.get(extension) || 'application/octet-stream';
+  }
+
+  getIdentificationFromCertificate(certificate: string): string {
+    return certificate.split('_')[0];
   }
 
   s3Client = new S3Client({
@@ -96,7 +102,7 @@ export class UploadFilesService {
           carpetasSet.add(entry.path);
           continue;
         }
-
+        const certificate_name = path.dirname(entry.path);
         const folderPath = path.dirname(entry.path) + '/';
         const fileName = path.basename(entry.path);
 
@@ -110,8 +116,7 @@ export class UploadFilesService {
             spacesPath,
             'certificates-private-zones',
           );
-          console.log(uploadResult);
-          
+          // console.log(uploadResult);
 
           if (uploadResult) {
             estructura.urls_archivos.push({
@@ -119,9 +124,27 @@ export class UploadFilesService {
               carpeta: folderPath,
               url: uploadResult,
             });
-            console.log(
-              `Success: file upload success, certificate: ${fileName}, name: ${folderPath}`,
-            );
+
+            const identification =
+              this.getIdentificationFromCertificate(fileName);
+            console.log('identification', identification);
+            console.log('Certificado', certificate_name);
+
+            const user =
+              await this.kalmsystemService.findByIdentification(identification);
+
+            if (user) {
+              const user_id = user.id.toString();
+              await this.kalmsystemService.writeCertificateData(
+                user_id,
+                certificate_name,
+                uploadResult.fileUrl,
+              );
+
+              console.log(
+                `Success: file upload success, certificate: ${fileName}, name: ${certificate_name}`,
+              );
+            }
           } else {
             console.log(`Error: No se pudo obtener URL para ${fileName}`);
           }
@@ -135,8 +158,7 @@ export class UploadFilesService {
       }
 
       estructura.carpetas = Array.from(carpetasSet);
-      console.log(estructura);
-
+      // console.log(estructura);
       return { estructura };
     } catch (error) {
       throw new Error(`Error processing ZIP file: ${error.message}`);

@@ -23,6 +23,9 @@ export class UserCertificate {
   user_id: number;
 
   @Column()
+  name: string;
+
+  @Column()
   file_path: string;
 
   @Column({
