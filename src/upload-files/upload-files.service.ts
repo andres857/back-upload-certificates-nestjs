@@ -15,6 +15,7 @@ interface FileStructure {
     nombre: string;
     carpeta: string;
     url: any;
+    status?: string;
   }>;
 }
 
@@ -119,12 +120,6 @@ export class UploadFilesService {
           // console.log(uploadResult);
 
           if (uploadResult) {
-            estructura.urls_archivos.push({
-              nombre: fileName,
-              carpeta: folderPath,
-              url: uploadResult,
-            });
-
             const identification =
               this.getIdentificationFromCertificate(fileName);
             console.log('identification', identification);
@@ -144,6 +139,20 @@ export class UploadFilesService {
               console.log(
                 `Success: file upload success, certificate: ${fileName}, name: ${certificate_name}`,
               );
+
+              estructura.urls_archivos.push({
+                nombre: fileName,
+                carpeta: folderPath,
+                url: uploadResult,
+                status: 'success',
+              });
+            } else {
+              estructura.urls_archivos.push({
+                nombre: fileName,
+                carpeta: folderPath,
+                url: uploadResult,
+                status: 'error',
+              });
             }
           } else {
             console.log(`Error: No se pudo obtener URL para ${fileName}`);
