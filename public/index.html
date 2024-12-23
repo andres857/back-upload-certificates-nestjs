@@ -85,7 +85,7 @@
                             </form>
                         </div>
                     </div>
-                    <h2 v-if="didRequest && loadSuccess" class="mb-3"> Todos los archivos se han subido correctamente</h2>
+                    <!-- <h2 v-if="didRequest && loadSuccess" class="mb-3"> </h2> -->
                 </div>
                 
                 <div class="col-12">
@@ -133,7 +133,7 @@
                             <span class="visually-hidden ">Loading...</span>
                         </div>
                         <div class="spinner-text">
-                            <p class="m-0">Subiendo certificados...</p>
+                            <p class="m-0">{{ modalMessage }}</p>
                         </div>
                     </div>
                 </div>
@@ -159,6 +159,7 @@
                 const isBootstrapLoaded = ref(false)
                 const loadSuccess = ref(false)
                 const didRequest = ref(false)
+                const modalMessage = ref('')
 
                 const headers = [
                     { text: "Certificado", value: "carpeta",  },
@@ -175,6 +176,7 @@
                     
                     if (modalInstance.value) {
                         modalInstance.value.show()
+                        modalMessage.value = 'Subiendo certificados...'
                     }
                     const formData = new FormData()
                     const file = fileInput.value.files[0]
@@ -198,7 +200,11 @@
                         dataTable.value.length === 0 ? loadSuccess.value = true : loadSuccess.value = false
 
                         if (modalInstance.value) {
-                            modalInstance.value.hide()
+                            resetForm()
+                            modalMessage.value = 'Todos los certificados se han subido correctamente'
+                            setTimeout(() => {
+                                modalInstance.value.hide()
+                            }, 1000)
                         }
 
                     } catch (error) {
@@ -250,7 +256,6 @@
                     }
                 }
 
-
                 const exportToExcel = () => {
                     // Verificamos que tengamos datos para exportar
                     if (!dataTable.value || dataTable.value.length === 0) {
@@ -297,40 +302,36 @@
                         alert('Hubo un error al exportar los datos');
                     }
                 };
+
                 onMounted(() => {
-                    // Esperamos un poco más para asegurar que Bootstrap esté cargado
                     setTimeout(() => {
                         initModal()
-                        // Si no se cargó, intentamos nuevamente después de un momento
                         if (!isBootstrapLoaded.value) {
                             setTimeout(initModal, 500)
                         }
                     }, 100)
                 })
 
-
-
                 return {
                     headers,
                     fileInput,
                     dataTable,
-                    handleFileChange,
-                    handleSubmit,
-                    showModal,
-                    hideModal,
                     modalInstance,
                     isBootstrapLoaded,
                     loadSuccess,
                     didRequest,
+                    modalMessage,
+                    handleFileChange,
+                    handleSubmit,
+                    showModal,
+                    hideModal,
                     exportToExcel,
-                    resetForm
+                    resetForm,
                 }
             }
         })
         app.mount('#app')
     </script>
     
-    
-   
 </body>
 </html>
