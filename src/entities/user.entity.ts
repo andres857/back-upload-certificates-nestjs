@@ -178,10 +178,10 @@ export class User {
   @Column({ nullable: true, type: 'text' })
   camp_4: string;
 
-  @Column({
-    type: 'enum',
-    enum: ['active', 'inactive'],
-    default: 'active',
-  })
-  status_user: string;
+  // @Column({
+  //   type: 'enum',
+  //   enum: ['active', 'inactive'],
+  //   default: 'active',
+  // })
+  // status_user: string;
 }
