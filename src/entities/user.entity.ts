@@ -49,11 +49,11 @@ export class User {
   // @Column({ nullable: true, type: 'text' })
   // two_factor_secret: string;
 
-  @Column({ nullable: true, type: 'text' })
-  two_factor_recovery_codes: string;
+  // @Column({ nullable: true, type: 'text' })
+  // two_factor_recovery_codes: string;
 
-  @Column({ nullable: true, type: 'timestamp' })
-  two_factor_confirmed_at: Date;
+  // @Column({ nullable: true, type: 'timestamp' })
+  // two_factor_confirmed_at: Date;
 
   @Column({ default: false })
   approved: boolean;
