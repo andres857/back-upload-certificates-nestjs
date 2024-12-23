@@ -16,8 +16,8 @@ import { UserCertificate } from 'src/entities/user-certificate.entity';
     }),
     TypeOrmModule.forRoot({
       type: 'mysql',
-      host: '192.168.0.102',
-      port: 3307,
+      host: process.env.DB_HOST,
+      port: Number(process.env.DB_PORT ) || 3000,
       username: process.env.DB_USERNAME,
       password: process.env.DB_PASSWORD,
       database: process.env.DB_DATABASE,

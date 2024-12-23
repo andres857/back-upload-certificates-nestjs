@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-// import { promises as fs } from 'fs';
 import * as path from 'path';
 import * as unzipper from 'unzipper';
 import {
@@ -109,7 +108,6 @@ export class UploadFilesService {
 
         try {
           const fileContent = await entry.buffer();
-
           const spacesPath = `${folderPath}${fileName}`;
           const uploadResult = await this.uploadToSpaces(
             fileName,
@@ -117,7 +115,6 @@ export class UploadFilesService {
             spacesPath,
             'certificates-private-zones',
           );
-          // console.log(uploadResult);
 
           if (uploadResult) {
             const identification =

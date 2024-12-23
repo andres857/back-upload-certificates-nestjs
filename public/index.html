@@ -1,17 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload Documents</title>
+   <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Upload Certificates</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <!-- easy vue table -->
+    <link href="https://unpkg.com/vue3-easy-data-table/dist/style.css" rel="stylesheet">
+    <script src="https://unpkg.com/vue3-easy-data-table"></script>
+     <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 20px auto;
-            padding: 20px;
-        }
         .upload-form {
             border: 2px dashed #ccc;
             padding: 20px;
@@ -45,77 +46,144 @@
         .preview {
             margin-top: 20px;
         }
+
+        .customize-table {
+            --easy-table-border: 1px solid #dee2e6;
+            --easy-table-row-border: 1px solid #dee2e6;
+            width: 100%;
+            max-width: 100%;
+        }
+
     </style>
 </head>
 <body>
     <div id="app">
-        <h1>Upload Certificates</h1>
-        <div class="upload-form">
-            <form @submit.prevent="handleSubmit">
-                <div class="form-group">
-                    <label for="document">Select Document:</label>
-                    <input 
-                        type="file" 
-                        id="document" 
-                        ref="fileInput"
-                        required
-                        @change="handleFileChange"
-                    >
+        <div class="container">
+            <div class="row">
+                <h1>Upload Certificates</h1>
+                <div class="upload-form">
+                    <form @submit.prevent="handleSubmit">
+                        <div class="form-group">
+                            <label for="document">Select compressed file .zip:</label>
+                            <input 
+                                type="file" 
+                                id="document" 
+                                ref="fileInput"
+                                required
+                                @change="handleFileChange"
+                            >
+                        </div>
+                        <button type="submit">Upload</button>
+                    </form>
                 </div>
-                <button type="submit">Upload</button>
-            </form>
-        </div>
-        <div class="preview">
-            <div v-if="uploadStatus" :style="{ color: uploadStatus.error ? 'red' : 'black' }">
-                {{ uploadStatus.message }}
-                <div v-if="uploadStatus.data">
-                    <h3>Información de la subida</h3>
-                    <ul>
-                        <li v-for="url in dataTable">
-                            Certificado: {{ url.carpeta }}
-                            <br>
-                            Archivo: {{ url.nombre }}
-                            <br>
-                            URL: {{ url.url.fileUrl }}
-                            <br>
-                            Estado: {{ url.status }}
-                            <br>
-                        </li>
-                    </ul>
-                    <h2>Archivos</h2>
-                    <ul>
-                        <li v-for="archivo in uploadStatus.data.urls_archivos">{{ archivo }}</li>
-                    </ul>
 
-                    <h2>Certificados</h2>
+                <!-- Agregamos la tabla -->
+                <div v-if="dataTablef">
+                    <!-- {{ uploadStatus.message }} -->
 
-                    <ul>
-                        <li v-for="carpeta in uploadStatus.data.carpetas">{{ carpeta }}</li>
-                    </ul>
-                    <h2>Archivos</h2>
-                    <ul>
-                        <li v-for="archivo in uploadStatus.data.archivos">{{ archivo }}</li>
-                    </ul>
-                    <h2>URLs</h2>
-                    <ul>
-                        <li v-for="url in uploadStatus.data.urls_archivos">{{ url.url.fileUrl }}</li>
-                    </ul>
+                    <h2>Archivos Subidos</h2>
+                    <easy-data-table 
+                    :headers="headersf"
+                    :items="dataTablef"
+                    :rows-per-page="10"
+                    :rows-items="[10, 20, 50]"
+                    table-class-name="customize-table"
+                    :border-cell="true"
+                    />
+                </div>
+
+                <div class="preview">
+                    <div v-if="uploadStatus" :style="{ color: uploadStatus.error ? 'red' : 'black' }">
+                        <div v-if="uploadStatus.data">
+                            <h3>Información de la subida</h3>
+                            <ul>
+                                <li v-for="url in dataTable">
+                                    Certificado: {{ url.carpeta }}
+                                    <br>
+                                    Archivo: {{ url.nombre }}
+                                    <br>
+                                    URL: {{ url.url.fileUrl }}
+                                    <br>
+                                    Estado: {{ url.status }}
+                                    <br>
+                                </li>
+                            </ul>
+                            <h2>Archivos</h2>
+                            <ul>
+                                <li v-for="archivo in uploadStatus.data.urls_archivos">{{ archivo }}</li>
+                            </ul>
+        
+                            <h2>Certificados</h2>
+        
+                            <ul>
+                                <li v-for="carpeta in uploadStatus.data.carpetas">{{ carpeta }}</li>
+                            </ul>
+                            <h2>Archivos</h2>
+                            <ul>
+                                <li v-for="archivo in uploadStatus.data.archivos">{{ archivo }}</li>
+                            </ul>
+                            <h2>URLs</h2>
+                            <ul>
+                                <li v-for="url in uploadStatus.data.urls_archivos">{{ url.url.fileUrl }}</li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
+        </div>        
     </div>
 
     <script>
         const { createApp, ref } = Vue
 
-        createApp({
+        const app = createApp({
+            components: {
+                'easy-data-table': window['vue3-easy-data-table']
+            },
+
             setup() {
+            
                 const fileInput = ref(null)
                 const uploadStatus = ref(null)
                 const dataTable = ref(null)
 
+                const dataTablef = ref([
+                    {
+                        carpeta: "CERTIFICADO DE ENTRENAMIENTO EN ERGOESPIROMETRIA",
+                        nombre: "1129578142_esther_maria_campo_bautista_certificados_entrenamiento_en_ergoespirometria.pdf",
+                        url: {
+                            fileUrl: "https://certificates-private-zones.nyc3.digitaloceanspaces.com/CERTIFICADO DE ENTRENAMIENTO EN ERGOESPIROMETRIA/1129578142_esther_maria_campo_bautista_certificados_entrenamiento_en_ergoespirometria.pdf"
+                        },
+                        status: "error"
+                    },
+                    {
+                        carpeta: "CERTIFICADO DE ENTRENAMIENTO EN ERGOESPIROMETRIA",
+                        nombre: "13476768_dickens_abigail_montanez_camacho_certificados_entrenamiento_en_ergoespirometria.pdf",
+                        url: {
+                            fileUrl: "https://certificates-private-zones.nyc3.digitaloceanspaces.com/CERTIFICADO DE ENTRENAMIENTO EN ERGOESPIROMETRIA/13476768_dickens_abigail_montanez_camacho_certificados_entrenamiento_en_ergoespirometria.pdf"
+                        },
+                        status: "error"
+                    },
+                    {
+                        carpeta: "CERTIFICADO DE ENTRENAMIENTO EN ERGOESPIROMETRIA",
+                        nombre: "52692754_karen_alexandra_duenas_criado_certificado_de_entrenamiento_en_ergoespirometria.pdf",
+                        url: {
+                            fileUrl: "https://certificates-private-zones.nyc3.digitaloceanspaces.com/CERTIFICADO DE ENTRENAMIENTO EN ERGOESPIROMETRIA/52692754_karen_alexandra_duenas_criado_certificado_de_entrenamiento_en_ergoespirometria.pdf"
+                        },
+                        status: "success"
+                    }
+                ]);
+
+                const headersf = [
+                    { text: "Certificado", value: "carpeta",  },
+                    { text: "Archivo", value: "nombre",  },
+                    { text: "Estado", value: "status",  },
+                    // { text: "URL", value: "url.fileUrl",  }
+                ];
+
                 const handleFileChange = (event) => {
-                    // Opcional: añadir lógica adicional cuando se selecciona el archivo
+                    console.log(event);
+                    
                 }
 
                 const handleSubmit = async () => {
@@ -151,11 +219,18 @@
                     fileInput,
                     uploadStatus,
                     dataTable,
+                    dataTablef,
                     handleFileChange,
-                    handleSubmit
+                    handleSubmit,
+                    headersf
                 }
             }
-        }).mount('#app')
+        })
+        app.mount('#app')
     </script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js" integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF" crossorigin="anonymous"></script>
+   
 </body>
 </html>
