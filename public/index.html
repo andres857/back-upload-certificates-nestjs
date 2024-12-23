@@ -136,6 +136,9 @@
                         </div>
                     </div>
                 </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @click="hideModal">Cerrar</button>
+                </div>
             </div>
             </div>
         </div>
@@ -199,9 +202,9 @@
                             loadSuccess.value = true
                             modalMessage.value = 'Todos los certificados se han subido correctamente'
                             resetForm()
-                            setTimeout(() => {
-                                modalInstance.value.hide()
-                            }, 2500)
+                            // setTimeout(() => {
+                            //     modalInstance.value.hide()
+                            // }, 10000)
                         }else{
                             loadSuccess.value = false
                             modalMessage.value = 'Error subiendo certificados'
@@ -209,9 +212,6 @@
                                 modalInstance.value.hide()
                             }, 1000)
                         }
-
-                        
-                        
 
                     } catch (error) {
                         if (modalInstance.value) {
