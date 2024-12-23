@@ -78,18 +78,17 @@
                                         id="document" 
                                         ref="fileInput"
                                         required
-                                        @change="handleFileChange"
+                                        
                                     >
                                 </div>
                                 <button type="submit">Subir</button>
                             </form>
                         </div>
                     </div>
-                    <!-- <h2 v-if="didRequest && loadSuccess" class="mb-3"> </h2> -->
                 </div>
                 
                 <div class="col-12">
-                    <div v-if="didRequest && !loadSuccess && dataTable.length > 0">
+                    <div v-if="didRequest && !loadSuccess && dataTable.length > 0 ">
                         <div class="d-flex justify-content-between align-items-center my-3">
                             <h2 class="mb-3"> Error al procesar los siguientes certificados</h2>
                             <div class="d-flex justify-content-center align-items-center gap-2">
@@ -168,16 +167,13 @@
                     { text: "Mensaje", value: "message",  },
                 ];
 
-                const handleFileChange = (event) => {
-                    console.log(event);
-                }
-
                 const handleSubmit = async () => {
                     
                     if (modalInstance.value) {
                         modalInstance.value.show()
                         modalMessage.value = 'Subiendo certificados...'
                     }
+
                     const formData = new FormData()
                     const file = fileInput.value.files[0]
                     formData.append('file', file)
@@ -197,15 +193,25 @@
                             .map(file => file)
 
                         // Si el array dataTable.value está vacío, se muestra el mensaje de éxito
-                        dataTable.value.length === 0 ? loadSuccess.value = true : loadSuccess.value = false
-
-                        if (modalInstance.value) {
-                            resetForm()
+                        // dataTable.value.length === 0 ? loadSuccess.value = true : loadSuccess.value = false
+                        
+                        if (dataTable.value.length === 0) {
+                            loadSuccess.value = true
                             modalMessage.value = 'Todos los certificados se han subido correctamente'
+                            resetForm()
+                            setTimeout(() => {
+                                modalInstance.value.hide()
+                            }, 2500)
+                        }else{
+                            loadSuccess.value = false
+                            modalMessage.value = 'Error subiendo certificados'
                             setTimeout(() => {
                                 modalInstance.value.hide()
                             }, 1000)
                         }
+
+                        
+                        
 
                     } catch (error) {
                         if (modalInstance.value) {
@@ -321,7 +327,6 @@
                     loadSuccess,
                     didRequest,
                     modalMessage,
-                    handleFileChange,
                     handleSubmit,
                     showModal,
                     hideModal,
