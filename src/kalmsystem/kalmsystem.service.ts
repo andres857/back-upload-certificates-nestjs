@@ -57,7 +57,7 @@ export class KalmsystemService {
 
         const certificate = new UserCertificate();
         certificate.user_id = id;
-        certificate.client_id = client_id;
+        certificate.client_id = 72;
         certificate.file_path = url_certificate;
         certificate.type = CertificateType.EXTERNAL;
         certificate.issue_date = new Date();
