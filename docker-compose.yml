@@ -6,8 +6,17 @@ services:
     volumes:
       - ./:/usr/src/app
       # - ./node_modules:/usr/src/app/node_modules
+    environment:
+      - PORT=${PORT}
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_DATABASE=${DB_DATABASE}
+      - DB_USERNAME=${DB_USERNAME}
+      - AWS_ACCESS_KEY_ID=${aws_access_key_id}
+      - AWS_SECRET_ACCESS_KEY=${aws_secret_access_key}
     ports:
-      - 3005:3000
+      - 3000:3000
     logging:
       driver: "json-file"
       options:
