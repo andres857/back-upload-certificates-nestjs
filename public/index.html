@@ -12,6 +12,8 @@
      <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
 
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js" integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF" crossorigin="anonymous"></script>
     <style>
         .upload-form {
             border: 2px dashed #ccc;
@@ -58,135 +60,102 @@
 </head>
 <body>
     <div id="app">
-        <div class="container">
-            <div class="row">
-                <h1>Upload Certificates</h1>
-                <div class="upload-form">
-                    <form @submit.prevent="handleSubmit">
-                        <div class="form-group">
-                            <label for="document">Select compressed file .zip:</label>
-                            <input 
-                                type="file" 
-                                id="document" 
-                                ref="fileInput"
-                                required
-                                @change="handleFileChange"
-                            >
+        <div v-if="!dataTable" class="container">
+            <div class="row justify-content-center min-vh-100 mt-5">
+                <div class="col-12">
+                    <h1>Certificados</h1>
+                    <div class="upload-form">
+                        <form @submit.prevent="handleSubmit">
+                            <div class="form-group">
+                                <label for="document">Seleccione un archivo .zip:</label>
+                                <input 
+                                    type="file" 
+                                    id="document" 
+                                    ref="fileInput"
+                                    required
+                                    @change="handleFileChange"
+                                >
+                            </div>
+                            <button type="submit">Subir</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div v-else>
+            <div class="container">
+                <div class="row justify-content-center align-items-center min-vh-100">
+                    <div class="col-12">
+                        <h2 class="my-3 "> Certificados subidos</h2>
+                        <easy-data-table 
+                            :headers="headers"
+                            :items="dataTable"
+                            :rows-per-page="10"
+                            :rows-items="[10, 20, 50]"
+                            table-class-name="customize-table"
+                            :border-cell="true"
+                        />
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal -->
+        <div   class="modal fade" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Estado</h5>
+                </div>
+                <div class="modal-body">
+                    <div class="d-flex justify-content-center align-items-center gap-2">
+                        <div class="spinner-border text-primary" style="width: 1.7rem; height: 1.7rem;" role="status">
+                            <span class="visually-hidden ">Loading...</span>
                         </div>
-                        <button type="submit">Upload</button>
-                    </form>
-                </div>
-
-                <!-- Agregamos la tabla -->
-                <div v-if="dataTablef">
-                    <!-- {{ uploadStatus.message }} -->
-
-                    <h2>Archivos Subidos</h2>
-                    <easy-data-table 
-                    :headers="headersf"
-                    :items="dataTablef"
-                    :rows-per-page="10"
-                    :rows-items="[10, 20, 50]"
-                    table-class-name="customize-table"
-                    :border-cell="true"
-                    />
-                </div>
-
-                <div class="preview">
-                    <div v-if="uploadStatus" :style="{ color: uploadStatus.error ? 'red' : 'black' }">
-                        <div v-if="uploadStatus.data">
-                            <h3>Información de la subida</h3>
-                            <ul>
-                                <li v-for="url in dataTable">
-                                    Certificado: {{ url.carpeta }}
-                                    <br>
-                                    Archivo: {{ url.nombre }}
-                                    <br>
-                                    URL: {{ url.url.fileUrl }}
-                                    <br>
-                                    Estado: {{ url.status }}
-                                    <br>
-                                </li>
-                            </ul>
-                            <h2>Archivos</h2>
-                            <ul>
-                                <li v-for="archivo in uploadStatus.data.urls_archivos">{{ archivo }}</li>
-                            </ul>
-        
-                            <h2>Certificados</h2>
-        
-                            <ul>
-                                <li v-for="carpeta in uploadStatus.data.carpetas">{{ carpeta }}</li>
-                            </ul>
-                            <h2>Archivos</h2>
-                            <ul>
-                                <li v-for="archivo in uploadStatus.data.archivos">{{ archivo }}</li>
-                            </ul>
-                            <h2>URLs</h2>
-                            <ul>
-                                <li v-for="url in uploadStatus.data.urls_archivos">{{ url.url.fileUrl }}</li>
-                            </ul>
+                        <div class="spinner-text">
+                            <p class="m-0">Subiendo certificados...</p>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>        
+            </div>
+        </div>
     </div>
 
     <script>
-        const { createApp, ref } = Vue
+        const { createApp, ref, onMounted } = Vue
 
         const app = createApp({
             components: {
                 'easy-data-table': window['vue3-easy-data-table']
             },
 
-            setup() {
-            
+            setup() {            
                 const fileInput = ref(null)
-                const uploadStatus = ref(null)
                 const dataTable = ref(null)
 
-                const dataTablef = ref([
-                    {
-                        carpeta: "CERTIFICADO DE ENTRENAMIENTO EN ERGOESPIROMETRIA",
-                        nombre: "1129578142_esther_maria_campo_bautista_certificados_entrenamiento_en_ergoespirometria.pdf",
-                        url: {
-                            fileUrl: "https://certificates-private-zones.nyc3.digitaloceanspaces.com/CERTIFICADO DE ENTRENAMIENTO EN ERGOESPIROMETRIA/1129578142_esther_maria_campo_bautista_certificados_entrenamiento_en_ergoespirometria.pdf"
-                        },
-                        status: "error"
-                    },
-                    {
-                        carpeta: "CERTIFICADO DE ENTRENAMIENTO EN ERGOESPIROMETRIA",
-                        nombre: "13476768_dickens_abigail_montanez_camacho_certificados_entrenamiento_en_ergoespirometria.pdf",
-                        url: {
-                            fileUrl: "https://certificates-private-zones.nyc3.digitaloceanspaces.com/CERTIFICADO DE ENTRENAMIENTO EN ERGOESPIROMETRIA/13476768_dickens_abigail_montanez_camacho_certificados_entrenamiento_en_ergoespirometria.pdf"
-                        },
-                        status: "error"
-                    },
-                    {
-                        carpeta: "CERTIFICADO DE ENTRENAMIENTO EN ERGOESPIROMETRIA",
-                        nombre: "52692754_karen_alexandra_duenas_criado_certificado_de_entrenamiento_en_ergoespirometria.pdf",
-                        url: {
-                            fileUrl: "https://certificates-private-zones.nyc3.digitaloceanspaces.com/CERTIFICADO DE ENTRENAMIENTO EN ERGOESPIROMETRIA/52692754_karen_alexandra_duenas_criado_certificado_de_entrenamiento_en_ergoespirometria.pdf"
-                        },
-                        status: "success"
-                    }
-                ]);
+                // Modal para mostrar el estado de los certificados subidos
+                const modalInstance = ref(null)
+                const isBootstrapLoaded = ref(false)
+                const isModalOpen = ref(true)
 
-                const headersf = [
+                const headers = [
                     { text: "Certificado", value: "carpeta",  },
                     { text: "Archivo", value: "nombre",  },
                     { text: "Estado", value: "status",  },
-                    // { text: "URL", value: "url.fileUrl",  }
+                    { text: "Mensaje", value: "message",  },
                 ];
 
                 const handleFileChange = (event) => {
                     console.log(event);
-                    
                 }
 
                 const handleSubmit = async () => {
+                    
+                    if (modalInstance.value) {
+                        modalInstance.value.show()
+                    }
+
                     const formData = new FormData()
                     const file = fileInput.value.files[0]
                     formData.append('file', file)
@@ -196,41 +165,84 @@
                             method: 'POST',
                             body: formData
                         })
-
+                        isModalOpen.value = true
+                        console.log('isModalOpen change', isModalOpen.value);
                         const data = await response.json()
                         console.log(data);
                         console.log(data.mensaje);
 
                         dataTable.value = data.estructura.urls_archivos
-                        uploadStatus.value = {
-                            error: false,
-                            data: data.estructura,
-                            message: `Upload successful! File URL: ${data.mensaje}`
+                        if (modalInstance.value) {
+                            modalInstance.value.hide()
                         }
+
                     } catch (error) {
-                        uploadStatus.value = {
-                            error: true,
-                            message: `Upload failed: ${error.message}`
+                        if (modalInstance.value) {
+                            modalInstance.value.hide()
                         }
                     }
                 }
 
+                // Función para verificar si Bootstrap está disponible
+                const checkBootstrap = () => {
+                    return typeof window !== 'undefined' && window.bootstrap && window.bootstrap.Modal
+                }
+                const initModal = () => {
+                    if (checkBootstrap()) {
+                        const modalElement = document.getElementById('myModal')
+                            if (modalElement) {
+                                modalInstance.value = new window.bootstrap.Modal(modalElement)
+                                isBootstrapLoaded.value = true
+                                console.log('Modal inicializado correctamente')
+                            } else {
+                                console.warn('Elemento del modal no encontrado')
+                            }
+                    } else {
+                        console.warn('Bootstrap no está completamente cargado')
+                    }
+                }
+
+                // Funciones para controlar el modal
+                const showModal = () => {
+                    if (modalInstance.value) {
+                        modalInstance.value.show()
+                    }
+                }
+
+                const hideModal = () => {
+                    if (modalInstance.value) {
+                        modalInstance.value.hide()
+                    }
+                }
+                onMounted(() => {
+                    // Esperamos un poco más para asegurar que Bootstrap esté cargado
+                    setTimeout(() => {
+                        initModal()
+                        // Si no se cargó, intentamos nuevamente después de un momento
+                        if (!isBootstrapLoaded.value) {
+                            setTimeout(initModal, 500)
+                        }
+                    }, 100)
+                })
+
                 return {
+                    headers,
                     fileInput,
-                    uploadStatus,
                     dataTable,
-                    dataTablef,
                     handleFileChange,
                     handleSubmit,
-                    headersf
+                    showModal,
+                    hideModal,
+                    modalInstance,
+                    isModalOpen,
+                    isBootstrapLoaded,
                 }
             }
         })
         app.mount('#app')
     </script>
     
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js" integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF" crossorigin="anonymous"></script>
+    
    
 </body>
 </html>

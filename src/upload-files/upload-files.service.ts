@@ -13,8 +13,9 @@ interface FileStructure {
   urls_archivos: Array<{
     nombre: string;
     carpeta: string;
-    url: any;
-    status?: string;
+    url?: string;
+    status: string;
+    message?: string;
   }>;
 }
 
@@ -105,66 +106,71 @@ export class UploadFilesService {
         const certificate_name = path.dirname(entry.path);
         const folderPath = path.dirname(entry.path) + '/';
         const fileName = path.basename(entry.path);
+        const identification = this.getIdentificationFromCertificate(fileName);
 
         try {
           const fileContent = await entry.buffer();
           const spacesPath = `${folderPath}${fileName}`;
-          const uploadResult = await this.uploadToSpaces(
-            fileName,
-            fileContent,
-            spacesPath,
-            'certificates-private-zones',
-          );
 
-          if (uploadResult) {
-            const identification =
-              this.getIdentificationFromCertificate(fileName);
-            console.log('identification', identification);
-            console.log('Certificado', certificate_name);
+          const user = await this.kalmsystemService.findByIdentification(identification);
 
-            const user =
-              await this.kalmsystemService.findByIdentification(identification);
-
-            if (user) {
+          if (user) {
+            const uploadResult = await this.uploadToSpaces(
+              fileName,
+              fileContent,
+              spacesPath,
+              'certificates-private-zones',
+            );
+  
+            if (uploadResult) {
               const user_id = user.id.toString();
               await this.kalmsystemService.writeCertificateData(
                 user_id,
                 certificate_name,
                 uploadResult.fileUrl,
               );
-
+              console.log('identification', identification);
+              console.log('Certificado', certificate_name);
               console.log(
                 `Success: file upload success, certificate: ${fileName}, name: ${certificate_name}`,
               );
-
+              // Agregar la respuesta del upload al array de urls_archivos para retornarla al frontend
               estructura.urls_archivos.push({
                 nombre: fileName,
                 carpeta: folderPath,
-                url: uploadResult,
-                status: 'success',
+                url: uploadResult.fileUrl,
+                status: 'Success',
+                message: 'file upload success',
               });
             } else {
+              // Error al subir el archivo al CDN
+              console.log(`Error: No se pudo obtener URL para ${fileName}`);
               estructura.urls_archivos.push({
                 nombre: fileName,
                 carpeta: folderPath,
-                url: uploadResult,
-                status: 'error',
+                url: uploadResult?.fileUrl,
+                status: 'Error',
+                message: 'Error al subir el archivo al CDN',
               });
             }
           } else {
-            console.log(`Error: No se pudo obtener URL para ${fileName}`);
+            estructura.urls_archivos.push({
+              nombre: fileName,
+              carpeta: folderPath,
+              url: null,
+              status: 'Error',
+              message: 'user not found',
+            });
           }
         } catch (error) {
           console.error(
             `Error al procesar archivo ${fileName}: ${error.message}`,
           );
         }
-
         estructura.archivos.push(fileName);
       }
 
       estructura.carpetas = Array.from(carpetasSet);
-      // console.log(estructura);
       return { estructura };
     } catch (error) {
       throw new Error(`Error processing ZIP file: ${error.message}`);
