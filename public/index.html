@@ -60,46 +60,40 @@
 </head>
 <body>
     <div id="app">
-        <div v-if="!dataTable" class="container">
-            <div class="row justify-content-center min-vh-100 mt-5">
-                <div class="col-12">
-                    <h1>Certificados</h1>
-                    <div class="upload-form">
-                        <form @submit.prevent="handleSubmit">
-                            <div class="form-group">
-                                <label for="document">Seleccione un archivo .zip:</label>
-                                <input 
-                                    type="file" 
-                                    id="document" 
-                                    ref="fileInput"
-                                    required
-                                    @change="handleFileChange"
-                                >
-                            </div>
-                            <button type="submit">Subir</button>
-                        </form>
-                    </div>
+        <div class="container">
+            <div class="row">
+                <h1>Certificados</h1>
+                <div class="upload-form">
+                    <form @submit.prevent="handleSubmit">
+                        <div class="form-group">
+                            <label for="document">Seleccione un archivo .zip:</label>
+                            <input 
+                                type="file" 
+                                id="document" 
+                                ref="fileInput"
+                                required
+                                @change="handleFileChange"
+                            >
+                        </div>
+                        <button type="submit">Subir</button>
+                    </form>
+                </div>
+
+                <!-- Agregamos la tabla -->
+                <div v-if="dataTable ">
+                    <h2> Estado de los archivos subidos</h2>
+                    <easy-data-table 
+                    :headers="headers"
+                    :items="dataTable"
+                    :rows-per-page="10"
+                    :rows-items="[10, 20, 50]"
+                    table-class-name="customize-table"
+                    :border-cell="true"
+                    />
                 </div>
             </div>
-        </div>
-
-        <div v-else>
-            <div class="container">
-                <div class="row justify-content-center align-items-center min-vh-100">
-                    <div class="col-12">
-                        <h2 class="my-3 "> Certificados subidos</h2>
-                        <easy-data-table 
-                            :headers="headers"
-                            :items="dataTable"
-                            :rows-per-page="10"
-                            :rows-items="[10, 20, 50]"
-                            table-class-name="customize-table"
-                            :border-cell="true"
-                        />
-                </div>
-            </div>
-        </div>
-
+        </div>   
+        
         <!-- Modal -->
         <div   class="modal fade" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
             <div class="modal-dialog">
