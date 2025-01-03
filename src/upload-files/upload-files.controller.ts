@@ -35,7 +35,10 @@ export class UploadFilesController {
     }
 
     try {
+      console.log('ZIP upload start');
       const result = await this.uploadFilesService.processZipFile(file);
+      console.log('ZIP upload sucess');
+      
       return {
         success: true,
         estructura: result.estructura,
