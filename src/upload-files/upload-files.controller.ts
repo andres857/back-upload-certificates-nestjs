@@ -26,7 +26,9 @@ export class UploadFilesController {
   // Esta ruta maneja la subida del archivo
   @Post()
   @UseInterceptors(FileInterceptor('file')) // 'file' debe coincidir con el nombre en el FormData
+
   async uploadFile(@UploadedFile() file: Express.Multer.File): Promise<any> {
+    console.log('ZIP upload start');
     if (!file.originalname.endsWith('.zip')) {
       throw new HttpException(
         'Por favor sube un archivo ZIP válido',
@@ -35,7 +37,6 @@ export class UploadFilesController {
     }
 
     try {
-      console.log('ZIP upload start');
       const result = await this.uploadFilesService.processZipFile(file);
       console.log('ZIP upload sucess');
       
