@@ -9,7 +9,7 @@ async function bootstrap() {
 
   // Habilitar CORS
   app.enableCors({
-    origin: true, // Puedes cambiarlo a tu dominio específico en producción
+    origin: true, 
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
   });
@@ -27,7 +27,7 @@ async function bootstrap() {
     }),
   );
   app.useStaticAssets(join(__dirname, '..', 'public'));
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(process.env.PORT || 3000, '0.0.0.0');
   console.log(`Server is running on port ${process.env.PORT ?? 3000}`);
 }
 bootstrap();

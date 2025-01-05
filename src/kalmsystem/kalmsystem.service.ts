@@ -17,17 +17,6 @@ export class KalmsystemService {
     private readonly certificateRepository: Repository<UserCertificate>,
   ) {}
 
-  // async findAll() {
-  //   return await this.userRepository.find({
-  //     where: {
-  //       status_user: 'active',
-  //       name: Not(''),
-  //     },
-  //     order: {
-  //       created_at: 'DESC',
-  //     },
-  //   });
-  // }
   async findById(id: number): Promise<User> {
     const user = await this.userRepository.findOne({
       where: { id },
@@ -39,7 +28,6 @@ export class KalmsystemService {
     const user = await this.userRepository.findOne({
       where: { identification },
     });
-
     return user;
   }
 

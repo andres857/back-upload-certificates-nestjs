@@ -1,6 +1,9 @@
 services:
   app-backend:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
     command: yarn run start:dev
     restart: unless-stopped
     volumes:

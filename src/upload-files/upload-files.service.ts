@@ -1,12 +1,16 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, Provider } from '@nestjs/common';
 import * as path from 'path';
 import * as unzipper from 'unzipper';
 import {
   ObjectCannedACL,
   PutObjectCommand,
+  S3,
   S3Client,
 } from '@aws-sdk/client-s3';
 import { KalmsystemService } from 'src/kalmsystem/kalmsystem.service';
+import { S3UploadException, S3TimeoutException } from 'src/exceptions/s3.exceptions';
+import e from 'express';
+
 interface FileStructure {
   carpetas: string[];
   archivos: string[];
@@ -21,6 +25,17 @@ interface FileStructure {
 
 @Injectable()
 export class UploadFilesService {
+  
+  private readonly s3Client = new S3Client({
+    endpoint: 'https://nyc3.digitaloceanspaces.com',
+    forcePathStyle: false,
+    region: 'nyc3',
+    credentials: {
+      accessKeyId: process.env.aws_access_key_id,
+      secretAccessKey: process.env.aws_secret_access_key,
+    },
+  });
+
   constructor(private readonly kalmsystemService: KalmsystemService) {}
 
   private getContentType(fileName: string): string {
@@ -35,8 +50,19 @@ export class UploadFilesService {
         'docx',
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
       ],
+      ['xls', 'application/vnd.ms-excel'],
+      [
+        'xlsx',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      ],
+      ['ppt', 'application/vnd.ms-powerpoint'],
+      [
+        'pptx',
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      ],
     ]);
-
+    console.log('sddsds',contentTypes.get(extension));
+    
     return contentTypes.get(extension) || 'application/octet-stream';
   }
 
@@ -44,55 +70,55 @@ export class UploadFilesService {
     return certificate.split('_')[0];
   }
 
-  s3Client = new S3Client({
-    endpoint: 'https://nyc3.digitaloceanspaces.com',
-    forcePathStyle: false,
-    region: 'nyc3',
-    credentials: {
-      accessKeyId: process.env.aws_access_key_id,
-      secretAccessKey: process.env.aws_secret_access_key,
-    },
-  });
-
   uploadToSpaces = async (fileName, fileContent, spacePath, bucket) => {
-    console.log('********', fileName);
-    const region = 'nyc3';
-    const ACL = 'public-read' as ObjectCannedACL;
     const contentType = this.getContentType(fileName);
-
-    const params = {
-      Bucket: bucket,
-      Key: spacePath,
-      Body: fileContent,
-      ACL: ACL,
-      ContentType: contentType,
-    };
-
-    try {
-      const data = await this.s3Client.send(new PutObjectCommand(params));
-      const fileUrl = `https://${bucket}.${region}.digitaloceanspaces.com/${spacePath}`;
-
-      console.log(
-        'Successfully uploaded object: ' + params.Bucket + '/' + params.Key,
-      );
-      return {
-        data: data,
-        fileUrl: fileUrl,
+    if (contentType !== 'application/octet-stream') {
+      const region = 'nyc3';
+      const ACL = 'public-read' as ObjectCannedACL;  
+      const params = {
+        Bucket: bucket,
+        Key: spacePath,
+        Body: fileContent,
+        ACL: ACL,
+        ContentType: contentType,
       };
-    } catch (err) {
-      console.log('Error', err);
+  
+      try {
+        const data = await this.s3Client.send(new PutObjectCommand(params));
+        const fileUrl = `https://${bucket}.${region}.digitaloceanspaces.com/${spacePath}`;
+        console.log('[SPACES DO] - Successfully uploaded file: ' + params.Bucket + '/' + params.Key);
+        
+        return {
+          status: 'Success',
+          message: 'file upload success to spaces',
+          data: data,
+          fileUrl: fileUrl,
+        };
+      }catch (err) {
+        if (err instanceof S3UploadException) {
+          throw err;
+        }
+        if (err instanceof S3TimeoutException) {
+          throw err;
+        }
+        throw new InternalServerErrorException('Error uploading file to S3', err);
+      }
+    }
+    // Error al obtener el contentType, el file tiene una extensión no soportada
+    return {
+      status: 'Error',
+      message: `El archivo tiene una extensión no soportada`,
+      fileUrl: null,
+      data:null
     }
   };
 
-  async processZipFile(
-    file: Express.Multer.File,
-  ): Promise<{ estructura: FileStructure }> {
+  async processZipFile(file: Express.Multer.File,): Promise<{ estructura: FileStructure }> {
     const estructura: FileStructure = {
       carpetas: [],
       archivos: [],
       urls_archivos: [],
     };
-
     const carpetasSet = new Set<string>();
 
     try {
@@ -122,7 +148,7 @@ export class UploadFilesService {
               'certificates-private-zones',
             );
   
-            if (uploadResult) {
+            if (uploadResult.status === 'Success') {
               const user_id = user.id.toString();
               await this.kalmsystemService.writeCertificateData(
                 user_id,
@@ -139,18 +165,18 @@ export class UploadFilesService {
                 nombre: fileName,
                 carpeta: folderPath,
                 url: uploadResult.fileUrl,
-                status: 'Success',
-                message: 'file upload success',
+                status: uploadResult.status,
+                message: uploadResult.message,
               });
             } else {
               // Error al subir el archivo al CDN
-              console.log(`Error: No se pudo obtener URL para ${fileName}`);
+              console.log(`[SPACES - Error] - ${uploadResult.message}`);
               estructura.urls_archivos.push({
                 nombre: fileName,
                 carpeta: folderPath,
                 url: uploadResult?.fileUrl,
-                status: 'Error',
-                message: 'Error al subir el archivo al CDN',
+                status: uploadResult.status,
+                message: uploadResult.message,
               });
             }
           } else {
@@ -159,21 +185,28 @@ export class UploadFilesService {
               carpeta: folderPath,
               url: null,
               status: 'Error',
-              message: 'user not found',
+              message: 'Usuario no encontrado',
             });
           }
-        } catch (error) {
-          console.error(
-            `Error al procesar archivo ${fileName}: ${error.message}`,
-          );
+        } catch (err) {
+          console.log(err);
+          
+          console.error(`Error al procesar archivo ${fileName}: ${err.message}`);
+          estructura.urls_archivos.push({
+            nombre: fileName,
+            carpeta: folderPath,
+            url: null,
+            status: 'Error',
+            message: 'Error inesperado con el archivo ZIP',
+          });
         }
         estructura.archivos.push(fileName);
       }
 
       estructura.carpetas = Array.from(carpetasSet);
       return { estructura };
-    } catch (error) {
-      throw new Error(`Error processing ZIP file: ${error.message}`);
+    } catch (err) {
+      throw new InternalServerErrorException('[ERROR GENERAL] - Error con el archivo ZIP', err);
     }
   }
 }

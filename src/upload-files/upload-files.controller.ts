@@ -25,8 +25,7 @@ export class UploadFilesController {
 
   // Esta ruta maneja la subida del archivo
   @Post()
-  @UseInterceptors(FileInterceptor('file')) // 'file' debe coincidir con el nombre en el FormData
-
+  @UseInterceptors(FileInterceptor('file'))
   async uploadFile(@UploadedFile() file: Express.Multer.File): Promise<any> {
     console.log('ZIP upload start');
     if (!file.originalname.endsWith('.zip')) {
@@ -39,17 +38,15 @@ export class UploadFilesController {
     try {
       const result = await this.uploadFilesService.processZipFile(file);
       console.log('ZIP upload sucess');
-      
       return {
-        success: true,
+        // success: true,
         estructura: result.estructura,
-        mensaje: `Se subieron ${result.estructura.urls_archivos.length} archivos correctamente`,
+        message: `Se subieron ${result.estructura.urls_archivos.length} archivos correctamente`,
       };
     } catch (error) {
       throw new HttpException(
         {
-          success: false,
-          error: `Error al procesar el archivo ZIP: ${error.message}`,
+          message: `Error al procesar el archivo ZIP: ${error.message}`,
         },
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
