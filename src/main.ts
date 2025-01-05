@@ -7,6 +7,15 @@ import * as express from 'express';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
+  // Configurar timeouts globales para la aplicación
+  app.use((req, res, next) => {
+    // Aumentar el timeout de la respuesta a 10 minutos
+    res.setTimeout(600000, () => {
+      console.log('Request ha alcanzado el timeout');
+    });
+    next();
+  });
+  
   // Habilitar CORS
   app.enableCors({
     origin: true, 
