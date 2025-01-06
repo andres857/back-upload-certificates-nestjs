@@ -51,7 +51,6 @@ export class KalmsystemService {
         certificate.issue_date = new Date();
         certificate.name = certificate_name;
         certificate.user_snapshot = user;
-        console.log('certificate', certificate);
         await this.certificateRepository.save(certificate);
       }
     } catch (error) {

@@ -60,9 +60,7 @@ export class UploadFilesService {
         'pptx',
         'application/vnd.openxmlformats-officedocument.presentationml.presentation',
       ],
-    ]);
-    console.log('sddsds',contentTypes.get(extension));
-    
+    ]);    
     return contentTypes.get(extension) || 'application/octet-stream';
   }
 
@@ -155,8 +153,6 @@ export class UploadFilesService {
                 certificate_name,
                 uploadResult.fileUrl,
               );
-              console.log('identification', identification);
-              console.log('Certificado', certificate_name);
               console.log(
                 `Success: file upload success, certificate: ${fileName}, name: ${certificate_name}`,
               );

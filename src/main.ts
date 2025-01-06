@@ -7,15 +7,11 @@ import * as express from 'express';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-  // Configurar timeouts globales para la aplicación
-  app.use((req, res, next) => {
-    // Aumentar el timeout de la respuesta a 10 minutos
-    res.setTimeout(600000, () => {
-      console.log('Request ha alcanzado el timeout');
-    });
-    next();
-  });
-  
+  const server = app.getHttpServer();
+
+  // Establecer el timeout en milisegundos
+  server.setTimeout(4800000); 
+
   // Habilitar CORS
   app.enableCors({
     origin: true, 
@@ -31,7 +27,7 @@ async function bootstrap() {
   app.use(
     '/files',
     express.raw({
-      limit: '50mb',
+      limit: '4000mb',
       type: 'application/zip',
     }),
   );
