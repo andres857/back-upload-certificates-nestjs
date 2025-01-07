@@ -1,5 +1,6 @@
 import { Injectable, InternalServerErrorException, Provider } from '@nestjs/common';
 import * as path from 'path';
+import * as fs from 'fs';
 import * as unzipper from 'unzipper';
 import {
   ObjectCannedACL,
@@ -9,7 +10,7 @@ import {
 } from '@aws-sdk/client-s3';
 import { KalmsystemService } from 'src/kalmsystem/kalmsystem.service';
 import { S3UploadException, S3TimeoutException } from 'src/exceptions/s3.exceptions';
-import e from 'express';
+
 
 interface FileStructure {
   carpetas: string[];
@@ -62,6 +63,51 @@ export class UploadFilesService {
       ],
     ]);    
     return contentTypes.get(extension) || 'application/octet-stream';
+  }
+
+  async guardarReporte(estructura) {
+    // Definimos la ruta base para los reportes en la raíz del proyecto
+    // process.cwd() nos da la ruta absoluta de donde se está ejecutando el proyecto
+    const reportPath = path.join(process.cwd(), 'temp', 'reports');
+  
+    return new Promise((resolve, reject) => {
+      // Verificamos si existe el directorio y lo creamos si es necesario
+      // recursive: true permite crear toda la estructura de directorios necesaria
+      if (!fs.existsSync(reportPath)) {
+        fs.mkdir(reportPath, { recursive: true }, (error) => {
+          if (error) {
+            console.error('Error creando directorio:', error);
+            return reject(error);
+          }
+          // Si se crea el directorio exitosamente, procedemos a guardar el archivo
+          guardarArchivo();
+        });
+      } else {
+        // Si el directorio ya existe, guardamos el archivo directamente
+        guardarArchivo();
+      }
+  
+      function guardarArchivo() {
+        // Creamos un nombre único para el archivo usando timestamp
+        // Reemplazamos : y . del timestamp para evitar problemas con nombres de archivo
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const fileName = `reporte-${timestamp}.json`;
+        const filePath = path.join(reportPath, fileName);
+        
+        // Convertimos la estructura a JSON con formato legible (el null y 2 agregan indentación)
+        const contenido = JSON.stringify(estructura, null, 2);
+        
+        // Escribimos el archivo de manera asíncrona
+        fs.writeFile(filePath, contenido, (error) => {
+          if (error) {
+            console.error('Error guardando archivo:', error);
+            return reject(error);
+          }
+          console.log(`Reporte guardado en: ${filePath}`);
+          resolve(filePath);
+        });
+      }
+    });
   }
 
   getIdentificationFromCertificate(certificate: string): string {
@@ -200,6 +246,14 @@ export class UploadFilesService {
       }
 
       estructura.carpetas = Array.from(carpetasSet);
+
+      this.guardarReporte(estructura)
+        .then(rutaArchivo => {
+          console.log('Reporte guardado exitosamente en:', rutaArchivo);
+        })
+        .catch(error => {
+          console.error('Error guardando el reporte:', error);
+        });
       return { estructura };
     } catch (err) {
       throw new InternalServerErrorException('[ERROR GENERAL] - Error con el archivo ZIP', err);
