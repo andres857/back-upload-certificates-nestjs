@@ -66,48 +66,28 @@ export class UploadFilesService {
   }
 
   async guardarReporte(estructura) {
-    // Definimos la ruta base para los reportes en la raíz del proyecto
-    // process.cwd() nos da la ruta absoluta de donde se está ejecutando el proyecto
-    const reportPath = path.join(process.cwd(), 'temp', 'reports');
-  
-    return new Promise((resolve, reject) => {
-      // Verificamos si existe el directorio y lo creamos si es necesario
-      // recursive: true permite crear toda la estructura de directorios necesaria
-      if (!fs.existsSync(reportPath)) {
-        fs.mkdir(reportPath, { recursive: true }, (error) => {
-          if (error) {
-            console.error('Error creando directorio:', error);
-            return reject(error);
-          }
-          // Si se crea el directorio exitosamente, procedemos a guardar el archivo
-          guardarArchivo();
-        });
-      } else {
-        // Si el directorio ya existe, guardamos el archivo directamente
-        guardarArchivo();
-      }
-  
-      function guardarArchivo() {
-        // Creamos un nombre único para el archivo usando timestamp
-        // Reemplazamos : y . del timestamp para evitar problemas con nombres de archivo
-        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-        const fileName = `reporte-${timestamp}.json`;
-        const filePath = path.join(reportPath, fileName);
-        
-        // Convertimos la estructura a JSON con formato legible (el null y 2 agregan indentación)
-        const contenido = JSON.stringify(estructura, null, 2);
-        
-        // Escribimos el archivo de manera asíncrona
-        fs.writeFile(filePath, contenido, (error) => {
-          if (error) {
-            console.error('Error guardando archivo:', error);
-            return reject(error);
-          }
-          console.log(`Reporte guardado en: ${filePath}`);
-          resolve(filePath);
-        });
-      }
-    });
+    try {
+      // Creamos un nombre único para el archivo usando timestamp
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const fileName = `reporte-${timestamp}.json`;
+      
+      // Definimos las rutas
+      const dirPath = path.join(process.cwd(), 'temp', 'reports');
+      const fullPath = path.join(dirPath, fileName);
+      
+      // Aseguramos que el directorio existe
+      await fs.promises.mkdir(dirPath, { recursive: true });
+      
+      // Convertimos y guardamos el archivo
+      const contenido = JSON.stringify(estructura, null, 2);
+      await fs.promises.writeFile(fullPath, contenido);
+      
+      console.log(`Reporte guardado exitosamente en: ${fullPath}`);
+      return fullPath;
+    } catch (error) {
+      console.error('Error guardando archivo:', error);
+      throw error;
+    }
   }
 
   getIdentificationFromCertificate(certificate: string): string {

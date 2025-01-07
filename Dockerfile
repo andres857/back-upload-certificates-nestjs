@@ -48,6 +48,11 @@ COPY --from=builder /usr/src/app/yarn.lock ./
 COPY --from=builder /usr/src/app/.env ./.env
 COPY --from=builder /usr/src/app/public ./public
 
+RUN mkdir -p ./temp/reports && \
+    chown -R node:node . && \
+    chmod -R 755 . && \
+    chmod -R 777 ./temp/reports
+
 RUN yarn install --production --frozen-lockfile
 ENV NODE_ENV=production
 EXPOSE 3000
