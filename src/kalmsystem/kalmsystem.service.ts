@@ -7,7 +7,7 @@ import {
   UserCertificate,
   CertificateType,
 } from 'src/entities/user-certificate.entity';
-import { log } from 'console';
+
 @Injectable()
 export class KalmsystemService {
   constructor(
@@ -35,6 +35,8 @@ export class KalmsystemService {
     user_id: string,
     certificate_name: string,
     url_certificate: string,
+    issueDateCertificate: Date,
+    expirationDateCertificate: Date | null
   ) {
     let id, client_id;
     const user_id_number = parseInt(user_id);
@@ -48,7 +50,13 @@ export class KalmsystemService {
         certificate.client_id = 72;
         certificate.file_path = url_certificate;
         certificate.type = CertificateType.EXTERNAL;
-        certificate.issue_date = new Date();
+        if (issueDateCertificate) {
+          certificate.issue_date = issueDateCertificate; 
+        }
+        
+        if (expirationDateCertificate) {
+          certificate.expiry_date = expirationDateCertificate;
+        }
         certificate.name = certificate_name;
         certificate.user_snapshot = user;
         await this.certificateRepository.save(certificate);

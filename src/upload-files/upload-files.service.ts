@@ -94,6 +94,60 @@ export class UploadFilesService {
     return certificate.split('_')[0];
   }
 
+  getDatesFromCertificate(certificate: string) {
+    console.log('certificado a procesar: ', certificate);
+    
+    // let issueDateCertificate: Date | null = null;
+    let issueDateCertificate: Date = new Date('2000-01-01');
+
+    let expirationDateCertificate: Date | null = null;
+
+    const parts = certificate.split('_');
+  
+    // Encontrar el elemento que contiene 'issueddate'
+    const expirationDateString = parts.find(part => part.includes('expirationdate'));
+
+
+    const issuedDateString = parts.find(part => part.includes('issueddate'));
+
+    if (expirationDateString) {
+      const dateString = expirationDateString
+        .replace('.pdf', '')
+        .replace('expirationdate', '');
+      
+      const date = new Date(dateString);
+      
+      // Validar que la fecha sea válida
+      if (!isNaN(date.getTime())) {
+        expirationDateCertificate = date;
+        console.log('Fecha de expiración válida:', date.toISOString());
+      } else {
+        console.error('Fecha de expiración inválida:', dateString);
+      }
+    }
+
+    // verificar si el certificado tiene issuedate
+    if (issuedDateString) {
+      const dateString = issuedDateString
+      .replace('.pdf', '')
+      .replace('issueddate', '');
+      const date = new Date(dateString);
+      
+      // Validar que la fecha sea válida
+      if (!isNaN(date.getTime())) {
+        issueDateCertificate = date;
+        console.log('Fecha de emisión válida:', date.toISOString());
+      } else {
+        console.error('Fecha de emisión inválida:', dateString);
+      }
+    }
+  
+    return {
+      issueDateCertificate,
+      expirationDateCertificate
+    };
+}
+
   uploadToSpaces = async (fileName, fileContent, spacePath, bucket) => {
     const contentType = this.getContentType(fileName);
     if (contentType !== 'application/octet-stream') {
@@ -157,6 +211,9 @@ export class UploadFilesService {
         const folderPath = path.dirname(entry.path) + '/';
         const fileName = path.basename(entry.path);
         const identification = this.getIdentificationFromCertificate(fileName);
+        const {issueDateCertificate,expirationDateCertificate }=this.getDatesFromCertificate(fileName);
+        console.log('Fecha de emision extraída:', issueDateCertificate);
+        console.log('Fecha de expiration extraída:', expirationDateCertificate);
 
         try {
           const fileContent = await entry.buffer();
@@ -178,6 +235,8 @@ export class UploadFilesService {
                 user_id,
                 certificate_name,
                 uploadResult.fileUrl,
+                issueDateCertificate,
+                expirationDateCertificate
               );
               console.log(
                 `Success: file upload success, certificate: ${fileName}, name: ${certificate_name}`,
@@ -240,3 +299,4 @@ export class UploadFilesService {
     }
   }
 }
+
