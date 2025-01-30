@@ -101,8 +101,10 @@ export class UploadFilesService {
     let issueDateCertificate: Date = new Date('2000-01-01');
 
     let expirationDateCertificate: Date | null = null;
-
-    const parts = certificate.split('_');
+    const out_extension = certificate.split('.')[0];
+    console.log('sin la extension del archivo:', out_extension);
+    
+    const parts = out_extension.split('_');
   
     // Encontrar el elemento que contiene 'issueddate'
     const expirationDateString = parts.find(part => part.includes('expirationdate'));
@@ -112,7 +114,6 @@ export class UploadFilesService {
 
     if (expirationDateString) {
       const dateString = expirationDateString
-        .replace('.pdf', '')
         .replace('expirationdate', '');
       
       const date = new Date(dateString);
@@ -129,7 +130,6 @@ export class UploadFilesService {
     // verificar si el certificado tiene issuedate
     if (issuedDateString) {
       const dateString = issuedDateString
-      .replace('.pdf', '')
       .replace('issueddate', '');
       const date = new Date(dateString);
       
@@ -214,7 +214,7 @@ export class UploadFilesService {
         const {issueDateCertificate,expirationDateCertificate }=this.getDatesFromCertificate(fileName);
         console.log('Fecha de emision extraída:', issueDateCertificate);
         console.log('Fecha de expiration extraída:', expirationDateCertificate);
-
+        // aqui
         try {
           const fileContent = await entry.buffer();
           const spacesPath = `${folderPath}${fileName}`;
