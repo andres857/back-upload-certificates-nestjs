@@ -1,8 +1,12 @@
 import {
+  Body,
   Controller,
+  FileTypeValidator,
   Get,
   HttpException,
   HttpStatus,
+  MaxFileSizeValidator,
+  ParseFilePipe,
   Post,
   Res,
   UploadedFile,
@@ -15,7 +19,9 @@ import { Response } from 'express';
 
 @Controller('upload-files')
 export class UploadFilesController {
-  constructor(private readonly uploadFilesService: UploadFilesService) {}
+  constructor(
+    private readonly uploadFilesService: UploadFilesService,
+  ) {}
 
   //  Esta ruta renderiza el formulario HTML
   @Get()
@@ -51,5 +57,22 @@ export class UploadFilesController {
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
+  }
+
+  @Post('certificate')
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadCertificate(
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }), // 5MB
+          new FileTypeValidator({ fileType: '.(pdf|jpg|jpeg|png)$' }),
+        ],
+      }),
+    )
+    file: Express.Multer.File,
+    @Body() certificateData: any,
+  ) {
+    return this.uploadFilesService.processUploadCertificate(file, certificateData);
   }
 }

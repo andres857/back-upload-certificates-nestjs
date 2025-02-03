@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException, Provider } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, Provider, BadRequestException } from '@nestjs/common';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as unzipper from 'unzipper';
@@ -146,7 +146,7 @@ export class UploadFilesService {
       issueDateCertificate,
       expirationDateCertificate
     };
-}
+  }
 
   uploadToSpaces = async (fileName, fileContent, spacePath, bucket) => {
     const contentType = this.getContentType(fileName);
@@ -298,5 +298,96 @@ export class UploadFilesService {
       throw new InternalServerErrorException('[ERROR GENERAL] - Error con el archivo ZIP', err);
     }
   }
+
+  async uploadCertificateToSpaces(
+    file: Express.Multer.File, 
+    certificateData: any
+  ) {
+    const fileName = file.originalname;
+    const contentType = this.getContentType(fileName);
+    const bucket = 'certificates-private-zones';
+
+    if (contentType === 'application/octet-stream') {
+      return {
+        status: 'Error',
+        message: 'El archivo tiene una extensión no soportada',
+        fileUrl: null,
+        data: null
+      };
+    }
+
+    // Construir el path del archivo
+    const spacePath = `certificates/${certificateData.userId}/${fileName}`;
+    
+    const params = {
+      Bucket: bucket,
+      Key: spacePath,
+      Body: file.buffer,
+      ACL: 'public-read' as ObjectCannedACL,
+      ContentType: contentType,
+    };
+
+    try {
+      const data = await this.s3Client.send(new PutObjectCommand(params));
+      const fileUrl = `https://${bucket}.nyc3.digitaloceanspaces.com/${spacePath}`;
+      
+      console.log('[SPACES DO] - Successfully uploaded file:', params.Bucket + '/' + params.Key);
+      
+      return {
+        status: 'Success',
+        message: 'Archivo subido exitosamente a Spaces',
+        data: data,
+        fileUrl: fileUrl,
+      };
+    } catch (err) {
+      console.error('[SPACES DO] - Error uploading file:', err);
+      throw new InternalServerErrorException('Error al subir archivo a Spaces', err);
+    }
+  }
+
+  async processUploadCertificate(
+    file: Express.Multer.File, 
+    certificateData: any) {
+      const certificateName = certificateData.certificate_name || 'mi primera chamba';
+    try {
+
+      console.log('Archivo recibido:', {
+        fileName: file.originalname,
+        mimeType: file.mimetype,
+        size: file.size
+      });
+      console.log('Datos del certificado:', certificateData);
+      
+
+      const uploadResult = await this.uploadCertificateToSpaces(file, certificateData);
+  
+      if (uploadResult.status === 'Success') {
+        console.log('Archivo subido exitosamente:', uploadResult.fileUrl);
+        
+        // Aquí podrías agregar la lógica adicional como guardar en base de datos
+        const user = await this.kalmsystemService.findByIdentification(certificateData.userId);
+        if (user) {
+          const user_id = user.id.toString();
+          await this.kalmsystemService.writeCertificateData(
+            user_id,
+            certificateName,
+            uploadResult.fileUrl,
+            certificateData.issueDate,
+            certificateData.expirationDate
+          );
+        }
+        return uploadResult;
+      }
+      return uploadResult;
+
+    } catch (error) {
+      return {
+        status: 'Error',
+        message: error.message || 'Error al procesar el archivo',
+        error: error.message
+      };
+    }
+  }
+
 }
 

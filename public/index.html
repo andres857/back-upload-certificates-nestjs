@@ -1,41 +1,44 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
-   <!-- Required meta tags -->
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Upload Certificates</title>
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <!-- easy vue table -->
-    <link href="https://unpkg.com/vue3-easy-data-table/dist/style.css" rel="stylesheet">
-    <script src="https://unpkg.com/vue3-easy-data-table"></script>
-     <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
-
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js" integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subir Certificado</title>
     <style>
-        .upload-form {
-            border: 2px dashed #ccc;
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+
+        .form-container {
+            background-color: #f5f5f5;
             padding: 20px;
             border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
+
         .form-group {
             margin-bottom: 15px;
         }
+
         label {
             display: block;
             margin-bottom: 5px;
             font-weight: bold;
         }
+
+        input[type="text"],
+        input[type="datetime-local"],
         input[type="file"] {
             width: 100%;
-            padding: 10px;
+            padding: 8px;
             border: 1px solid #ddd;
             border-radius: 4px;
+            box-sizing: border-box;
         }
+
         button {
             background-color: #4CAF50;
             color: white;
@@ -43,311 +46,104 @@
             border: none;
             border-radius: 4px;
             cursor: pointer;
+            font-size: 16px;
         }
+
         button:hover {
             background-color: #45a049;
         }
-        .preview {
+
+        #response {
             margin-top: 20px;
+            padding: 10px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            display: none;
         }
 
-        .customize-table {
-            --easy-table-border: 1px solid #dee2e6;
-            --easy-table-row-border: 1px solid #dee2e6;
-            width: 100%;
-            max-width: 100%;
+        .success {
+            background-color: #dff0d8;
+            border: 1px solid #d6e9c6;
+            color: #3c763d;
         }
 
+        .error {
+            background-color: #f2dede;
+            border: 1px solid #ebccd1;
+            color: #a94442;
+        }
     </style>
 </head>
 <body>
-    <div id="app">
-        <div class="container">
-            <div class="row justify-content-center align-items-center min-vh-100">
-
-                <div class="col-12">
-                    <div v-if="!didRequest">
-                        <h2 class="mb-3">Certificados</h2>
-                        <div class="upload-form">
-                            <form @submit.prevent="handleSubmit">
-                                <div class="form-group">
-                                    <label for="document">Seleccione un archivo .zip:</label>
-                                    <input 
-                                        type="file" 
-                                        id="document" 
-                                        ref="fileInput"
-                                        required
-                                    >
-                                </div>
-                                <button type="submit">Subir</button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="col-12">
-                    <div v-if="didRequest && !loadSuccess && dataTable.length > 0 ">
-                        <div class="d-flex justify-content-between align-items-center my-3">
-                            <h2 class="mb-3"> Error al procesar los siguientes certificados</h2>
-                            <div class="d-flex justify-content-center align-items-center gap-2">
-                                <button 
-                                    @click="exportToExcel" 
-                                    class="btn btn-success"
-                                    title="Exportar a Excel"
-                                >
-                                    Exportar a Excel
-                                </button>
-                            </div>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center my-3">
-                            <p>Se procesaron {{processedFiles}} certificados en total.</p>
-                        </div>
-
-                        <div>
-                            <easy-data-table
-                                :headers="headers"
-                                :items="dataTable"
-                                :rows-per-page="10"
-                                :rows-items="[10, 20, 50]"
-                                table-class-name="customize-table"
-                                :border-cell="true"
-                            />
-                        </div>
-                        
-                    </div>
-                </div>
-
+    <div class="form-container">
+        <h2>Subir Certificado</h2>
+        <form id="uploadForm">
+            <div class="form-group">
+                <label for="file">Archivo (PDF, JPG, PNG):</label>
+                <input type="file" id="file" name="file" accept=".pdf,.jpg,.jpeg,.png" required>
             </div>
-        </div>   
-        
-        <!-- Modal -->
-        <div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">Estado</h5>
-                </div>
-                <div class="modal-body">
-                    <div class="d-flex justify-content-center align-items-center gap-2 ">
-                        <div class="d-flex" style="width: 24px; height: 24px;">
-                            <!-- loading view modal -->
-                            <div v-if="IconProgressStatus === 'loading'" class="spinner-border text-primary" style="width: 1.5rem; height: 1.5rem;" role="status">
-                                <span class="visually-hidden ">Loading...</span>
-                            </div>
-                            <div v-else-if="IconProgressStatus === 'success'">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 12" width="18" height="18" fill="green"><path d="M6 0a6 6 0 1 1 0 12A6 6 0 0 1 6 0Zm-.705 8.737L9.63 4.403 8.392 3.166 5.295 6.263l-1.7-1.702L2.356 5.8l2.938 2.938Z"></path></svg>
-                            </div>
-                            <div v-else-if="IconProgressStatus === 'failed'">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 12" width="18" height="18" fill="red"><path d="M1.757 10.243a6.001 6.001 0 1 1 8.488-8.486 6.001 6.001 0 0 1-8.488 8.486ZM6 4.763l-2-2L2.763 4l2 2-2 2L4 9.237l2-2 2 2L9.237 8l-2-2 2-2L8 2.763Z"></path></svg>
-                            </div>
-                        </div>
-                        <div class="spinner-text flex-grow-1" style="max-width: 300px;">
-                            <p class="m-0">{{ modalMessage }}</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal" @click="hideModal">Cerrar</button>
-                </div>
+            
+            <div class="form-group">
+                <label for="userId">ID de Usuario:</label>
+                <input type="text" id="userId" name="userId" required>
             </div>
+            
+            <div class="form-group">
+                <label for="issueDate">Fecha de Emisión:</label>
+                <input type="datetime-local" id="issueDate" name="issueDate" required>
             </div>
-        </div>
+            
+            <div class="form-group">
+                <label for="expirationDate">Fecha de Expiración:</label>
+                <input type="datetime-local" id="expirationDate" name="expirationDate">
+            </div>
+            
+            <button type="submit">Subir Certificado</button>
+        </form>
     </div>
 
+    <div id="response"></div>
+
     <script>
-        const { createApp, ref, onMounted } = Vue
-
-        const app = createApp({
-            components: {
-                'easy-data-table': window['vue3-easy-data-table']
-            },
-
-            setup() {            
-                const fileInput = ref(null)
-                const dataTable = ref([])
-
-                // Modal para mostrar el estado de los certificados subidos
-                const modalInstance = ref(null)
-                const isBootstrapLoaded = ref(false)
-                const loadSuccess = ref(false)
-                const didRequest = ref(false)
-                const modalMessage = ref('')
-                const IconProgressStatus = ref('loading')
-                const processedFiles = ref()
-
-                const headers = [
-                    { text: "Certificado", value: "carpeta",  },
-                    { text: "Archivo", value: "nombre",  },
-                    { text: "Estado", value: "status",  },
-                    { text: "Mensaje", value: "message",  },
-                ];
-
-                const handleSubmit = async () => {
-                    
-                    if (modalInstance.value) {
-                        modalInstance.value.show()
-                        modalMessage.value = 'Subiendo certificados... Esta operación puede tardar varios minutos. No cierre la ventana'
-                    }
-
-                    const formData = new FormData()
-                    const file = fileInput.value.files[0]
-                    formData.append('file', file)
-
-                    try {
-                        didRequest.value = true
-                        const response = await fetch('/upload-files', {
-                            method: 'POST',
-                            body: formData
-                        })
-                        
-                        const data = await response.json();
-                        processedFiles.value = data.estructura.urls_archivos.length
-                        console.log(processedFiles.value);
-                        
-                        console.log(data.estructura.urls_archivos);
-                                        
-                        dataTable.value = data.estructura.urls_archivos
-                            .filter(file => file.status === 'Error')
-                            .map(file => file)
-
-                        // Si el array dataTable.value está vacío, se muestra el mensaje de éxito
-                        if (dataTable.value.length === 0) {
-                            loadSuccess.value = true
-                            IconProgressStatus.value = 'success'
-                            modalMessage.value = `Proceso finalizado: ${processedFiles.value} certificados procesados.`
-                            resetForm()
-                        }else{
-                            loadSuccess.value = false
-                            IconProgressStatus.value = 'failed'
-                            modalMessage.value = `Error: No se completó la carga de ${dataTable.value.length} certificados.`
-                        }
-                    } catch (error) {
-                        if (modalInstance.value) {
-                            modalInstance.value.hide()
-                        }
-                    }
-                }
-
-                const resetForm = () => {
-                    dataTable.value = []
-                    didRequest.value = false
-                    loadSuccess.value = false
-                    if (fileInput.value) {
-                        fileInput.value.value = '' // Limpiar el input file
-                    }
-                }
-
-                // Función para verificar si Bootstrap está disponible
-                const checkBootstrap = () => {
-                    return typeof window !== 'undefined' && window.bootstrap && window.bootstrap.Modal
-                }
-
-                const initModal = () => {
-                    if (checkBootstrap()) {
-                        const modalElement = document.getElementById('myModal')
-                            if (modalElement) {
-                                modalInstance.value = new window.bootstrap.Modal(modalElement)
-                                isBootstrapLoaded.value = true
-                                console.log('Modal inicializado correctamente')
-                            } else {
-                                console.warn('Elemento del modal no encontrado')
-                            }
-                    } else {
-                        console.warn('Bootstrap no está completamente cargado')
-                    }
-                }
-
-                // Funciones para controlar el modal
-                const showModal = () => {
-                    if (modalInstance.value) {
-                        modalInstance.value.show()
-                    }
-                }
-
-                const hideModal = () => {
-                    if (modalInstance.value) {
-                        IconProgressStatus.value = 'loading'
-                        modalInstance.value.hide()
-                    }
-                }
-
-                const exportToExcel = () => {
-                    // Verificamos que tengamos datos para exportar
-                    if (!dataTable.value || dataTable.value.length === 0) {
-                        alert('No hay datos para exportar');
-                        return;
-                    }
-
-                    try {
-                        // Creamos un nuevo libro de trabajo
-                        const workbook = XLSX.utils.book_new();
-                        
-                        // Convertimos nuestros datos a un formato más amigable para Excel
-                        const formattedData = dataTable.value.map(row => ({
-                            Certificado: row.carpeta,
-                            Archivo: row.nombre,
-                            Estado: row.status,
-                            Mensaje: row.message
-                        }));
-
-                        // Creamos una hoja de trabajo con nuestros datos
-                        const worksheet = XLSX.utils.json_to_sheet(formattedData);
-
-                        // Ajustamos el ancho de las columnas
-                        const columnWidths = [
-                            { wch: 20 }, // Certificado
-                            { wch: 30 }, // Archivo
-                            { wch: 15 }, // Estado
-                            { wch: 50 }  // Mensaje
-                        ];
-                        worksheet['!cols'] = columnWidths;
-
-                        // Añadimos la hoja al libro
-                        XLSX.utils.book_append_sheet(workbook, worksheet, 'Errores');
-
-                        // Generamos el archivo y lo descargamos
-                        const fecha = new Date().toISOString().split('T')[0];
-                        XLSX.writeFile(workbook, `reporte_errores_${fecha}.xlsx`);
-                        setTimeout(() => {
-                            resetForm()
-                        }, 1500)
-
-                    } catch (error) {
-                        console.error('Error al exportar a Excel:', error);
-                        alert('Hubo un error al exportar los datos');
-                    }
-                };
-
-                onMounted(() => {
-                    setTimeout(() => {
-                        initModal()
-                        if (!isBootstrapLoaded.value) {
-                            setTimeout(initModal, 500)
-                        }
-                    }, 100)
-                })
-
-                return {
-                    headers,
-                    fileInput,
-                    dataTable,
-                    modalInstance,
-                    isBootstrapLoaded,
-                    loadSuccess,
-                    didRequest,
-                    modalMessage,
-                    handleSubmit,
-                    showModal,
-                    hideModal,
-                    exportToExcel,
-                    resetForm,
-                    IconProgressStatus,
-                    processedFiles
-                }
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            const fileInput = document.getElementById('file');
+            const userId = document.getElementById('userId').value;
+            const issueDate = document.getElementById('issueDate').value;
+            const expirationDate = document.getElementById('expirationDate').value;
+            
+            formData.append('file', fileInput.files[0]);
+            formData.append('userId', userId);
+            formData.append('issueDate', issueDate);
+            if (expirationDate) {
+                formData.append('expirationDate', expirationDate);
             }
-        })
-        app.mount('#app')
+
+            const responseDiv = document.getElementById('response');
+            responseDiv.style.display = 'block';
+            
+            try {
+                const response = await fetch('http://localhost:3000/upload-files/certificate', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    responseDiv.className = 'success';
+                } else {
+                    responseDiv.className = 'error';
+                }
+                
+                responseDiv.textContent = JSON.stringify(result, null, 2);
+            } catch (error) {
+                responseDiv.className = 'error';
+                responseDiv.textContent = 'Error al enviar el archivo: ' + error.message;
+            }
+        });
     </script>
-    
 </body>
 </html>
