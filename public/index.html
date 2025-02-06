@@ -124,8 +124,8 @@
             const responseDiv = document.getElementById('response');
             responseDiv.style.display = 'block';
             
-            try {
-                const response = await fetch('http://localhost:3000/upload-files/certificate', {
+            try {https://upload-certificate.myzonego.com/upload-files/certificate'
+                const response = await fetch('https://upload-certificate.myzonego.com/upload-files/certificate', {
                     method: 'POST',
                     body: formData
                 });
