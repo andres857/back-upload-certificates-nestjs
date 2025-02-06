@@ -59,6 +59,7 @@ export class KalmsystemService {
         }
         certificate.name = certificate_name;
         certificate.user_snapshot = user;
+        certificate['created_at'] = new Date();
         await this.certificateRepository.save(certificate);
       }
     } catch (error) {
