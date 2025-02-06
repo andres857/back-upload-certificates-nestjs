@@ -10,6 +10,9 @@ import {
 } from '@aws-sdk/client-s3';
 import { KalmsystemService } from 'src/kalmsystem/kalmsystem.service';
 import { S3UploadException, S3TimeoutException } from 'src/exceptions/s3.exceptions';
+import { v4 as uuidv4 } from 'uuid';
+
+
 
 
 interface FileStructure {
@@ -303,9 +306,10 @@ export class UploadFilesService {
     file: Express.Multer.File, 
     certificateData: any
   ) {
+    const randomId = uuidv4();
     const fileName = file.originalname;
     const contentType = this.getContentType(fileName);
-    const bucket = 'certificates-private-zones';
+    const bucket = 'issues-certificates-private-zone';
 
     if (contentType === 'application/octet-stream') {
       return {
@@ -317,7 +321,7 @@ export class UploadFilesService {
     }
 
     // Construir el path del archivo
-    const spacePath = `certificates/${certificateData.userId}/${fileName}`;
+    const spacePath = `${randomId}`;
     
     const params = {
       Bucket: bucket,
@@ -364,19 +368,19 @@ export class UploadFilesService {
       if (uploadResult.status === 'Success') {
         console.log('Archivo subido exitosamente:', uploadResult.fileUrl);
         
-        // Aquí podrías agregar la lógica adicional como guardar en base de datos
-        const user = await this.kalmsystemService.findByIdentification(certificateData.userId);
-        if (user) {
-          const user_id = user.id.toString();
-          await this.kalmsystemService.writeCertificateData(
-            user_id,
-            certificateName,
-            uploadResult.fileUrl,
-            certificateData.issueDate,
-            certificateData.expirationDate
-          );
-        }
-        return uploadResult;
+        // // Aquí podrías agregar la lógica adicional como guardar en base de datos
+        // const user = await this.kalmsystemService.findByIdentification(certificateData.userId);
+        // if (user) {
+        //   const user_id = user.id.toString();
+        //   await this.kalmsystemService.writeCertificateData(
+        //     user_id,
+        //     certificateName,
+        //     uploadResult.fileUrl,
+        //     certificateData.issueDate,
+        //     certificateData.expirationDate
+        //   );
+        // }
+        // return uploadResult;
       }
       return uploadResult;
 
