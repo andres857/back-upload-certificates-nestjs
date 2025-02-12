@@ -65,11 +65,11 @@ export class UploadFilesService {
     return contentTypes.get(extension) || 'application/octet-stream';
   }
 
-  async guardarReporte(estructura) {
+  async guardarReporte(fileNameZip, estructura) {
     try {
       // Creamos un nombre único para el archivo usando timestamp
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-      const fileName = `reporte-${timestamp}.json`;
+      const fileName = `report-${fileNameZip}-${timestamp}.json`;
       
       // Definimos las rutas
       const dirPath = path.join(process.cwd(), 'temp', 'reports');
@@ -197,6 +197,7 @@ export class UploadFilesService {
       archivos: [],
       urls_archivos: [],
     };
+    const nombreArchivo = file.originalname; 
     const carpetasSet = new Set<string>();
 
     try {
@@ -286,7 +287,7 @@ export class UploadFilesService {
 
       estructura.carpetas = Array.from(carpetasSet);
 
-      this.guardarReporte(estructura)
+      this.guardarReporte(nombreArchivo, estructura)
         .then(rutaArchivo => {
           console.log('Reporte guardado exitosamente en:', rutaArchivo);
         })
