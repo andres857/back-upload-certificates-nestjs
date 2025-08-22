@@ -55,5 +55,5 @@ RUN mkdir -p ./temp/reports && \
 
 RUN yarn install --production --frozen-lockfile
 ENV NODE_ENV=production
-EXPOSE 3000
+# EXPOSE 3000
 CMD ["node", "dist/main"]

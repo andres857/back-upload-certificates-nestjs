@@ -1,0 +1,49 @@
+{
+  "carpetas": [
+    "Anestesia y mantenimiento del paciente trasplantado/"
+  ],
+  "archivos": [
+    "._Anestesia y mantenimiento del paciente trasplantado",
+    "1019058133_MONTOYA BELTRAN JUAN SEBASTIAN_certificate_Anestesia y mantenimiento del paciente trasplantado_done.pdf",
+    "._1019058133_MONTOYA BELTRAN JUAN SEBASTIAN_certificate_Anestesia y mantenimiento del paciente trasplantado_done.pdf",
+    "1019058133_RINCON FRANCO ISMAEL ENRIQUE_certificate_Anestesia y mantenimiento del paciente trasplantado_done.pdf",
+    "._1019058133_RINCON FRANCO ISMAEL ENRIQUE_certificate_Anestesia y mantenimiento del paciente trasplantado_done.pdf"
+  ],
+  "urls_archivos": [
+    {
+      "nombre": "._Anestesia y mantenimiento del paciente trasplantado",
+      "carpeta": "__MACOSX/",
+      "url": null,
+      "status": "Error",
+      "message": "Usuario no encontrado"
+    },
+    {
+      "nombre": "1019058133_MONTOYA BELTRAN JUAN SEBASTIAN_certificate_Anestesia y mantenimiento del paciente trasplantado_done.pdf",
+      "carpeta": "Anestesia y mantenimiento del paciente trasplantado/",
+      "url": null,
+      "status": "Error",
+      "message": "Error inesperado con el archivo ZIP"
+    },
+    {
+      "nombre": "._1019058133_MONTOYA BELTRAN JUAN SEBASTIAN_certificate_Anestesia y mantenimiento del paciente trasplantado_done.pdf",
+      "carpeta": "__MACOSX/Anestesia y mantenimiento del paciente trasplantado/",
+      "url": null,
+      "status": "Error",
+      "message": "Usuario no encontrado"
+    },
+    {
+      "nombre": "1019058133_RINCON FRANCO ISMAEL ENRIQUE_certificate_Anestesia y mantenimiento del paciente trasplantado_done.pdf",
+      "carpeta": "Anestesia y mantenimiento del paciente trasplantado/",
+      "url": null,
+      "status": "Error",
+      "message": "Error inesperado con el archivo ZIP"
+    },
+    {
+      "nombre": "._1019058133_RINCON FRANCO ISMAEL ENRIQUE_certificate_Anestesia y mantenimiento del paciente trasplantado_done.pdf",
+      "carpeta": "__MACOSX/Anestesia y mantenimiento del paciente trasplantado/",
+      "url": null,
+      "status": "Error",
+      "message": "Usuario no encontrado"
+    }
+  ]
+}
