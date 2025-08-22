@@ -8,6 +8,7 @@ import { UploadFilesModule } from './upload-files/upload-files.module';
 
 import { User } from 'src/entities/user.entity';
 import { UserCertificate } from 'src/entities/user-certificate.entity';
+import { VideosModule } from './videos/videos.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { UserCertificate } from 'src/entities/user-certificate.entity';
     }),
     KalmsystemModule,
     UploadFilesModule,
+    VideosModule,
   ],
   controllers: [AppController],
   providers: [AppService],
